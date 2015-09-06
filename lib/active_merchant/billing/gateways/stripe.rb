@@ -193,7 +193,11 @@ module ActiveMerchant #:nodoc:
       end
 
       def unstore(identification, options = {}, deprecated_options = {})
-        customer_id, card_id = identification.split("|")
+        customer_id, card_id = if identification.include?("|")
+          identification.split("|")
+        else
+          [identification, nil]
+        end
 
         if options.kind_of?(String)
           ActiveMerchant.deprecated "Passing the card_id as the 2nd parameter is deprecated. The response authorization includes both the customer_id and the card_id."
@@ -201,7 +205,11 @@ module ActiveMerchant #:nodoc:
           options = deprecated_options
         end
 
-        commit(:delete, "customers/#{CGI.escape(customer_id)}/cards/#{CGI.escape(card_id)}", nil, options)
+        if card_id.blank?
+          commit(:delete, "customers/#{CGI.escape(customer_id)}", nil, options)
+        else
+          commit(:delete, "customers/#{CGI.escape(customer_id)}/cards/#{CGI.escape(card_id)}", nil, options)
+        end
       end
 
       def tokenize_apple_pay_token(apple_pay_payment_token, options = {})

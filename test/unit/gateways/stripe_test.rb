@@ -179,6 +179,26 @@ class StripeTest < Test::Unit::TestCase
     assert response.test?
   end
 
+  def test_successful_delete_valuted_card
+    @gateway.expects(:ssl_request).returns(successful_card_delete)
+
+    assert response = @gateway.unstore("cus_3sgheFxeBgTQ3M|card_483etw4er9fg4vF3sQdrt3FG")
+    assert_instance_of Response, response
+    assert_success response
+
+    assert_equal 'card_483etw4er9fg4vF3sQdrt3FG', response.authorization
+  end
+
+  def test_successful_delete_nonvaluted_card
+    @gateway.expects(:ssl_request).returns(successful_customer_delete)
+
+    assert response = @gateway.unstore("cus_3sgheFxeBgTQ3M")
+    assert_instance_of Response, response
+    assert_success response
+
+    assert_equal 'cus_3sgheFxeBgTQ3M', response.authorization
+  end
+
   def test_passing_validate_false_on_store
     response = stub_comms(@gateway, :ssl_request) do
       @gateway.store(@credit_card, validate: false)
@@ -1510,6 +1530,24 @@ class StripeTest < Test::Unit::TestCase
           "customer": null,
           "type": "Visa"
       }
+    }
+    RESPONSE
+  end
+
+  def successful_customer_delete
+    <<-RESPONSE
+    {
+      "deleted": true,
+      "id": "cus_3sgheFxeBgTQ3M"
+    }
+    RESPONSE
+  end
+
+  def successful_card_delete
+    <<-RESPONSE
+    {
+      "deleted": true,
+      "id": "card_483etw4er9fg4vF3sQdrt3FG"
     }
     RESPONSE
   end
